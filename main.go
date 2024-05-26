@@ -1,6 +1,8 @@
 package main
 
 import (
+	"news/newsletter"
+
 	"log"
 	"net/http"
 
@@ -13,8 +15,16 @@ func main() {
 
 	router := gin.Default()
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
-	router.StaticFS("/", http.Dir("./frontend/dist/"))
 
-	log.Print("Listening on http://localhost" + port)
+	router.StaticFS("/", http.Dir("./frontend/dist/")) // Serve the frontend files
+
+	router.POST("/file/upload", newsletter.FileUpload)
+
+	newsLetterApi := router.Group("newsletter")
+	{
+		newsLetterApi.POST("/create", newsletter.Create)
+	}
+
+	log.Println("Listening on http://localhost" + port)
 	router.Run(port)
 }
