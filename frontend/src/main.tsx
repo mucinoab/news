@@ -5,13 +5,19 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
+import Newsletters from './components/Newsletters.tsx';
 import NewForm from './components/NewForm.tsx';
+
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <NewForm />,
+    element: <Newsletters />,
   },
+  {
+    path: "/new",
+    element: <NewForm />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

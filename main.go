@@ -21,12 +21,14 @@ func main() {
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
 	router.Use(static.Serve("/", static.LocalFile("./frontend/dist/", true))) // Serve the frontend files
 
-	router.POST("/file/upload", newsletter.FileUpload)
+	router.POST("/file/upload", newsletter.UploadFile)
+	router.Use(static.Serve("/file", static.LocalFile("/tmp/", false)))
 
 	newsLetterApi := router.Group("newsletter")
 	{
-		newsLetterApi.POST("/create", newsletter.Create)
 		newsLetterApi.GET("/", newsletter.GetAll)
+		newsLetterApi.POST("/create", newsletter.Create)
+		newsLetterApi.POST("/:id/send", newsletter.Send)
 	}
 
 	port := ":8080"

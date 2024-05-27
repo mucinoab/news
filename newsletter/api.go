@@ -76,3 +76,7 @@ func GetAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, newsletters)
 }
+
+func Send(c *gin.Context) {
+	c.JSON(http.StatusOK, "Newsletter sent successfully")
+}

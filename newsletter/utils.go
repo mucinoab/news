@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func FileUpload(c *gin.Context) {
+func UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 
 	if err != nil {
