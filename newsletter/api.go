@@ -7,6 +7,7 @@ import (
 )
 
 type Newsletter struct {
+	Id          int    `json:"id"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 
@@ -25,7 +26,53 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	// TODO: Save the newsletter to the database
+	db, err := NewDatabase()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to create the newsletter: %s", err)
+		return
+	}
+	defer db.Close()
+
+	query := `INSERT INTO NEWSLETTER
+              (NAME, DESCRIPTION, SUBJECT, CONTENT_ATTACHMENT_PATH )
+            VALUES (?, ?, ?, ?)`
+	_, err = db.driver.Exec(query, newsletter.Name, newsletter.Description, newsletter.Subject, newsletter.ContentFileName)
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to create the newsletter: %s", err)
+		return
+	}
 
 	c.String(http.StatusCreated, "Newsletter created successfully")
+}
+
+func GetAll(c *gin.Context) {
+	db, err := NewDatabase()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to get the newsletters: %s", err)
+		return
+	}
+	defer db.Close()
+
+	result, err := db.driver.Query("SELECT * FROM NEWSLETTER")
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to get the newsletters: %s", err)
+		return
+	}
+
+	newsletters := []Newsletter{}
+
+	for result.Next() {
+		var newsletter Newsletter
+		err = result.Scan(&newsletter.Id, &newsletter.Name, &newsletter.Description, &newsletter.Subject, &newsletter.ContentFileName)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to get the newsletters: %s", err)
+			return
+		}
+
+		newsletters = append(newsletters, newsletter)
+	}
+
+	c.JSON(http.StatusOK, newsletters)
 }
