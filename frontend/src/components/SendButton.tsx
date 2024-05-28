@@ -24,7 +24,7 @@ const SendButton = ({ id }: { id: number }) => {
     cancelText="No"
   >
     {notificationContainer}
-    <Button> Send </Button>
+    <Button style={{ marginLeft: 25 }}> Send </Button>
   </Popconfirm>;
 }
 

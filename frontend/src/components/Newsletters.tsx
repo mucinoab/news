@@ -21,7 +21,7 @@ const Newsletters = () => {
   if (news) {
     items = news.map((newsletter: Newsletter) => <NewsletterItem key={newsletter.id} newsletter={newsletter} />);
   } else {
-    const loadingCard = <Card loading extra={<Button >Send</Button >} style={{ width: "60vw" }} />;
+    const loadingCard = <Card loading extra={<Button >Send</Button >} />;
     items = new Array(3).fill(loadingCard);
   }
 
