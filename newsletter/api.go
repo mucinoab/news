@@ -6,8 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -172,5 +175,95 @@ func GetAll(c *gin.Context) {
 }
 
 func Send(c *gin.Context) {
-	c.JSON(http.StatusOK, "Newsletter sent successfully")
+	db, err := NewDatabase()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to get the newsletters: %s", err)
+		return
+	}
+	defer db.Close()
+
+	newsletterId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "Unknown newsletter ID")
+		return
+	}
+
+	result, err := db.driver.Query("SELECT * FROM NEWSLETTER WHERE ID = ?", newsletterId)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to get the newsletter: %s", err)
+		return
+	}
+
+	newsletter := Newsletter{}
+	if result.Next() {
+		err = result.Scan(&newsletter.Id, &newsletter.Name, &newsletter.Description, &newsletter.Subject, &newsletter.ContentFileName)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to get the newsletter: %s", err)
+			return
+		}
+	} else {
+		c.String(http.StatusNotFound, "Newsletter not found")
+		return
+	}
+
+	result, err = db.driver.Query("SELECT EMAIL FROM RECEIPIENT WHERE NEWSLETTER_ID = ?", newsletterId)
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to get the newsletter: %s", err)
+		return
+	}
+
+	emails := make([]string, 0)
+
+	for result.Next() {
+		var email string
+		err = result.Scan(&email)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to get the emails: %s", err)
+			return
+		}
+
+		emails = append(emails, email)
+	}
+
+	slices.Sort(emails)
+	emails = slices.Compact(emails) // Dedouplicate
+
+	err = SendEmails(newsletter, emails, getHostUrl(c))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to send emails: %s", err)
+		return
+	}
+
+	c.String(http.StatusOK, "Newsletter sent successfully")
+}
+
+func Unsubscribe(c *gin.Context) {
+	db, err := NewDatabase()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to unsubscribe: %s", err)
+		return
+	}
+	defer db.Close()
+
+	newsletterId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "Unknown newsletter ID")
+		return
+	}
+
+	email, err := url.QueryUnescape(c.Param("email"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "Failed to get email")
+		return
+	}
+
+	_, err = db.driver.Exec("DELETE FROM RECEIPIENT WHERE NEWSLETTER_ID = ? AND EMAIL = ?", newsletterId, email)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to unsubscribe: %s", err)
+		return
+	}
+
+	c.String(http.StatusOK, "Unsubscribed successfully")
 }

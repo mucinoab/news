@@ -27,6 +27,7 @@ func main() {
 	newsLetterApi := router.Group("newsletter")
 	{
 		newsLetterApi.GET("/", newsletter.GetAll)
+		newsLetterApi.GET("/:id/unsubscribe/:email", newsletter.Unsubscribe)
 		newsLetterApi.POST("/create", newsletter.Create)
 		newsLetterApi.POST("/:id/send", newsletter.Send)
 	}
