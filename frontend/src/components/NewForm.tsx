@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { Form, Flex, Input, Upload, Button, Typography, Divider } from 'antd';
+import { Form, Flex, Input, Upload, Button, Typography, Divider, notification } from 'antd';
 import { UploadOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 
 const NewForm = () => {
+  const [notificationApi, notificationContainer] = notification.useNotification();
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
@@ -20,9 +21,11 @@ const NewForm = () => {
       body: JSON.stringify(formData),
     }).then(async (response) => {
       if (response.ok) {
-        navigate("/");
+        // Add little delay to allow the server to process the request and to notify the user.
+        notificationApi.success({ message: "Newsletter created successfully", description: "Redirecting..." });
+        setTimeout(() => navigate("/"), 2000);
       } else {
-        throw new Error('Failed to submit form: ' + await response.text());
+        notificationApi.error({ message: "Failed to create newsletter", description: await response.text() });
       }
     }).catch(console.error);
   };
@@ -105,6 +108,7 @@ const NewForm = () => {
         </Form.Item>
       </Form>
     </Flex>
+    {notificationContainer}
   </React.Fragment >;
 };
 

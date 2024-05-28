@@ -68,6 +68,10 @@ func registerReceipients(nlID int64, nl Newsletter, db *Database) error {
 		}
 	}
 
+	if len(emails) == 0 {
+		return nil
+	}
+
 	valueStrings := make([]string, 0, len(emails))
 	valueArgs := make([]interface{}, 0, len(emails)*2)
 
