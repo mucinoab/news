@@ -2,6 +2,8 @@
 
 Go + Gin + TypeScript + React
 
+Try it out at: https://snews.fly.dev/
+
 ## How to run
 Using docker, first build the image:
 
